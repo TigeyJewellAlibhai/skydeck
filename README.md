@@ -1,5 +1,7 @@
 # SkyDeck
 
+![Display](display.png)
+
 The skydeck combines a ground station, rc link, and fpv system in a steam deck to create an efficient and portable way to control ardupilot drones
 
 
