@@ -3,33 +3,16 @@
 #include "driver/uart.h"
 #include <HardwareSerial.h>
 
-HardwareSerial Serial2(1);
 /* 
 -------------------------------------------------------------------------
- Simple Arduino trasmisster (PPM to ELRS)
- Decode PPM to CRSF protocol
- Arduino Nano
- ELRS 2.4G TX moduel
- Custom PCB from JLCPCB
- https://github.com/kkbin505/Arduino-Transmitter-for-ELRS
- * This file is part of Simple TX
+ * SkyDeck ESP32 Code. Flash to ESP32S2 or similar. Attach pin 17 to your ELRS tx running mavlink-rc.
  *
- * Simple TX is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Modified from SimpleTX, https://github.com/kkbin505/Arduino-Transmitter-for-ELRS
  *
- * Simple TX is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Cleanflight.  If not, see <http://www.gnu.org/licenses/>.
+ * This project is highly experimental, use of this code is at your own risk.
  */
 
-//Use this lib https://github.com/DzikuVx/PPMReader
-//Setup ppm read on pin 2, 
+HardwareSerial Serial2(1);
 
 byte channelAmount = 8;
 
@@ -83,11 +66,6 @@ enum chan_order{
 
 void setup()
 {
-  /*
-  TCCR1A = 0;  //reset timer1
-  TCCR1B = 0;
-  TCCR1B |= (1 << CS11);  //set timer1 to increment every 0,5 us or 1us on 8MHz
-  */
   for (uint8_t i = 0; i < CRSF_MAX_CHANNEL; i++) {
         rcChannels[i] = CRSF_CHANNEL_MID;
     }
@@ -97,21 +75,11 @@ void setup()
     
     Serial.begin(115200);
     Serial2.begin(SERIAL_BAUDRATE, SERIAL_8N1, RXD2, TXD2);
-  
-    //Serial.begin(115200);
-    //Serial.println("ready");
 }
 
 void loop()
 {
   uint32_t currentMicros = micros();
-  //rcChannels[1]=map(CRSF_CHANNEL_MAX,1000,2000,CRSF_CHANNEL_MIN,CRSF_CHANNEL_MAX);
-  //set fail safe value
-  //rcChannels[THROTTLE] = CRSF_CHANNEL_MIN; // 
-  //rcChannels[AILERON] = CRSF_CHANNEL_MID; // 
-  //rcChannels[ELEVATOR] = CRSF_CHANNEL_MID; // 
-  //rcChannels[RUDDER] = CRSF_CHANNEL_MID; // 
-  //rcChannels[AUX1] = CRSF_CHANNEL_MIN; // ARM Low
   
   if (currentMicros > crsfTime) {
       crsfPreparePacket(crsfPacket, rcChannels);
@@ -132,12 +100,6 @@ void loop()
       rcChannels[7] = map(control.substring(21,24).toInt(), 0, 800, CRSF_CHANNEL_MIN, CRSF_CHANNEL_MAX);
   }
 
-
-
-  //Serial.println(rcChannels[0]);
-  
-
-  //Serial.println("hjeeelllaa");
 }
 
 // crc implementation from CRSF protocol document rev7
@@ -178,16 +140,6 @@ void crsfPreparePacket(uint8_t packet[], int channels[]){
     for (uint8_t i = 0; i < CRSF_MAX_CHANNEL; i++) {
         output[i] = channels[i];
     }    
-   /*    
-       Serial.print("crsf  "); 
-       Serial.print(output[0]); 
-       Serial.print("  i"); 
-       Serial.print(output[1]); 
-       Serial.print("  i"); 
-       Serial.print(output[2]); 
-       Serial.print("  i"); 
-       Serial.print(output[3]); 
-       Serial.println(); */
 
     // packet[0] = UART_SYNC; //Header
     packet[0] = ADDR_MODULE; //Header
